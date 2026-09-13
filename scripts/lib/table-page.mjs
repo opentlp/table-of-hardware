@@ -8,6 +8,13 @@
 
 import { escapeHtml, humanise, page } from './html.mjs';
 import { projectName } from './projects.mjs';
+import {
+    CORE_URL,
+    DISCORD_URL,
+    ORGANIZATION_URL,
+    STUDIO_REPO_URL,
+    STUDIO_URL
+} from './site.mjs';
 
 /** @param {{ devices: any[] }} input */
 export function renderTablePage({ devices, families = [] }) {
@@ -61,11 +68,59 @@ export function renderTablePage({ devices, families = [] }) {
     // family has no page still deserves a filter chip.
     const familySlugs = [...new Set(devices.map(d => d.protocol?.family).filter(Boolean))].sort();
 
-    const body = `<div class="hero">
-<h1>Table of Hardware</h1>
-<p class="lede">Thermal label printers: protocols, specifications, and free and open source
-software support. ${devices.length} device${devices.length === 1 ? '' : 's'} catalogued.
-<a href="contributing.html">How to add one.</a></p>
+    const verified = devices.filter(device => device.status === 'verified').length;
+    const protocolCount = families.length;
+
+    const body = `<section class="project-hero" aria-labelledby="project-title">
+<p class="eyebrow">Open thermal label printing</p>
+<h1 id="project-title">Make the printer yours.</h1>
+<p class="hero-lede">Open tools, reusable drivers, and shared hardware knowledge for thermal label printers.</p>
+<div class="hero-actions">
+  <a class="button button-primary" href="${escapeHtml(STUDIO_URL)}">Open Studio</a>
+  <a class="button" href="#hardware">Find a printer</a>
+  <a class="text-link" href="${escapeHtml(DISCORD_URL)}">Join the Discord <span aria-hidden="true">→</span></a>
+</div>
+</section>
+
+<section class="project-map" aria-labelledby="project-map-title">
+<div class="section-heading">
+  <p class="eyebrow">One project, three layers</p>
+  <h2 id="project-map-title">From label design to bytes on the wire.</h2>
+</div>
+<div class="project-grid">
+  <article class="project-card project-studio">
+    <p class="project-number">01</p>
+    <h3>OpenTLP Studio</h3>
+    <p>Design and print labels in a local-first visual application.</p>
+    <div class="card-links"><a href="${escapeHtml(STUDIO_URL)}">Open the app</a><a href="${escapeHtml(STUDIO_REPO_URL)}">Source</a></div>
+  </article>
+  <article class="project-card project-core">
+    <p class="project-number">02</p>
+    <h3>OpenTLP Core</h3>
+    <p>Reusable protocol drivers, rendering contracts, and printer discovery.</p>
+    <div class="card-links"><a href="${escapeHtml(CORE_URL)}">Explore Core</a></div>
+  </article>
+  <article class="project-card project-toh">
+    <p class="project-number">03</p>
+    <h3>OpenTLP ToH</h3>
+    <p>An evidence-based map of models, rebrands, protocols, and software support.</p>
+    <div class="card-links"><a href="#hardware">Browse the table</a></div>
+  </article>
+</div>
+</section>
+
+<section class="hardware-section" id="hardware" aria-labelledby="hardware-title">
+<div class="hardware-heading">
+  <div>
+    <p class="eyebrow">OpenTLP ToH</p>
+    <h2 id="hardware-title">Table of Hardware</h2>
+    <p class="lede">Find a model by its brand, protocol, or Bluetooth name. Every recorded fact links back to evidence.</p>
+  </div>
+  <dl class="catalogue-stats" aria-label="Catalogue totals">
+    <div><dt>${devices.length === 1 ? 'printer' : 'printers'}</dt><dd>${devices.length}</dd></div>
+    <div><dt>${protocolCount === 1 ? 'protocol family' : 'protocol families'}</dt><dd>${protocolCount}</dd></div>
+    <div><dt>verified</dt><dd>${verified}</dd></div>
+  </dl>
 </div>
 
 <div class="controls">
@@ -110,16 +165,43 @@ ${rows}
 have a page documenting the wire format. A row marked <span class="rebadge">rebadge</span>
 is the same hardware as another entry under a different name.</p>
 </aside>
+</section>
+
+<section class="principles" aria-labelledby="principles-title">
+<div class="section-heading">
+  <p class="eyebrow">Why it exists</p>
+  <h2 id="principles-title">Printer support should outlive a vendor app.</h2>
+</div>
+<div class="principle-list">
+  <article><h3>Local by default</h3><p>Studio stores designs in the browser and sends print data directly to the selected printer.</p></article>
+  <article><h3>Protocols, not stickers</h3><p>Rebranded models are connected to the hardware and wire format they share.</p></article>
+  <article><h3>Evidence stays visible</h3><p>Verified captures, user reports, vendor documents, and unverified catalogue claims remain distinguishable.</p></article>
+  <article><h3>Built to be reused</h3><p>Hardware data is CC0. Core code is MIT. Applications can vendor a pinned snapshot without a runtime service.</p></article>
+</div>
+</section>
+
+<section class="community-band" aria-labelledby="community-title">
+<div>
+  <p class="eyebrow">Community hardware needs community evidence</p>
+  <h2 id="community-title">Test a printer. Record a protocol. Improve a driver.</h2>
+  <p>Hardware reports turn a plausible implementation into confirmed support.</p>
+</div>
+<div class="community-actions">
+  <a class="button button-inverse" href="contributing.html">Contribute</a>
+  <a href="${escapeHtml(DISCORD_URL)}">Discord</a>
+  <a href="${escapeHtml(ORGANIZATION_URL)}">GitHub</a>
+</div>
+</section>
 
 <script>
 ${FILTER_SCRIPT}
 </script>`;
 
     return page({
-        title: 'Table of Hardware — OpenTLP',
-        description: 'A community database of thermal label printers: protocols, specifications, and free and open source software support.',
+        title: 'OpenTLP — Open tools for thermal label printing',
+        description: 'OpenTLP Studio, reusable thermal-printer drivers, and a community-maintained Table of Hardware.',
         body,
-        active: 'table'
+        active: 'home'
     });
 }
 

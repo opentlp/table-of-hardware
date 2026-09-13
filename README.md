@@ -1,16 +1,26 @@
-# OpenTLP — Open Thermal Label Printers
+# OpenTLP — open thermal label printing
 
-A community database of thermal label printers: what they are, how to talk to
-them, and which software already supports them.
+OpenTLP is an open-source project for thermal label printing:
+
+- **OpenTLP Studio** is the local-first visual label application.
+- **OpenTLP Core** contains reusable printer drivers and rendering contracts.
+- **OpenTLP ToH** records the hardware, protocols, rebrands, and software support.
+
+This repository is the presentation layer for the Table of Hardware. The
+canonical device records, protocol-family pages, schemas, and validation live in
+[`packages/hardware`](https://github.com/opentlp/opentlp/tree/main/packages/hardware)
+in the OpenTLP monorepo. This site checks out that package at build time, so the
+website and Studio cannot drift onto separate catalogue copies.
 
 Modelled on [OpenWrt's Table of Hardware][toh]. One file per device, aggregated
 into a searchable table and a machine-readable export.
 
 [toh]: https://openwrt.org/toh/start
 
-**[Browse the table →](https://josb25.github.io/opentlp/)** ·
-**[devices.json →](https://josb25.github.io/opentlp/devices.json)** ·
-**[families.json →](https://josb25.github.io/opentlp/families.json)**
+**[Open Studio →](https://opentlp.github.io/opentlp/studio/)** ·
+**[Browse the table →](https://opentlp.github.io/table-of-hardware/)** ·
+**[Join Discord →](https://discord.gg/yksFD2rcPw)** ·
+**[GitHub organization →](https://github.com/opentlp)**
 
 ---
 
@@ -33,6 +43,21 @@ Bluetooth. Each entry tells you:
 If your printer is missing, [add it](CONTRIBUTING.md) — a partial entry is
 useful.
 
+## Develop the website
+
+Clone this repository beside the OpenTLP monorepo, or set
+`OPENTLP_HARDWARE_ROOT` to the monorepo's `packages/hardware` directory. Then:
+
+```bash
+npm ci
+npm run build
+npm start
+```
+
+Hardware validation belongs to the monorepo and runs with
+`npm run catalogue:validate` there. The website build reads that validated
+source and creates the disposable `site/` output.
+
 ## Write a driver
 
 Device pages describe printers. **Protocol family pages describe how to talk to
@@ -46,7 +71,7 @@ to implement that support. Both are recorded here, and neither substitutes for
 the other.
 
 ```bash
-curl -sO https://josb25.github.io/opentlp/families.json
+curl -sO https://opentlp.github.io/table-of-hardware/families.json
 ```
 
 ## Use the data
@@ -55,7 +80,7 @@ The database is published as two JSON files: `devices.json` and `families.json`.
 They are the integration contract, versioned and safe to depend on.
 
 ```bash
-curl -sO https://josb25.github.io/opentlp/devices.json
+curl -sO https://opentlp.github.io/table-of-hardware/devices.json
 ```
 
 ```bash
@@ -69,22 +94,22 @@ The data is CC0 — public domain. Ship it in your app, no attribution required.
 
 ### Importing into an application
 
-`scripts/export.mjs` turns `devices.json` into a driver table for a consuming
-project. It is deliberately small; copy it and change the output shape.
-
-Going the other way, `scripts/import-catalogue.mjs` seeds entries from a project
-that already knows things. Imported entries arrive as `status: unverified` with
-the project as their source.
+The monorepo's `@opentlp/hardware` package also generates a compact runtime
+catalogue for Studio and machine-readable exports for other consumers.
 
 ## Contribute
 
-Each printer has a page under `devices/`, and each protocol a page under
-`families/`: YAML front matter for the structured record, Markdown prose for
-everything else. Edit by hand, open a pull request.
+Each printer has a page under `packages/hardware/devices/`, and each protocol a
+page under `packages/hardware/families/` in the
+[OpenTLP monorepo](https://github.com/opentlp/opentlp): YAML front matter for the
+structured record, Markdown prose for everything else. Edit there and open a
+pull request.
 
 ```bash
-npm install
-npm run validate
+git clone https://github.com/opentlp/opentlp.git
+cd opentlp
+npm ci
+npm run catalogue:validate
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the fields and the evidence rules. The
@@ -106,7 +131,7 @@ the [NIIMBOT Community Wiki](https://printers.niim.blue/).
 
 | | |
 |---|---|
-| Data (`devices/`) | [CC0-1.0](LICENSES/CC0-1.0.txt) — public domain |
+| Hardware data | [CC0-1.0](LICENSES/CC0-1.0.txt) — public domain |
 | Code (`scripts/`) | [MIT](LICENSES/MIT.txt) |
 
 Sources keep their own terms. Linking to a document does not relicense it, and

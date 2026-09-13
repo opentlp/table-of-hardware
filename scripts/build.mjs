@@ -1,8 +1,8 @@
 /**
  * Generate the site.
  *
- * Input is the wiki under `devices/`; output is `site/` — a table, a page per
- * device, and `devices.json`. Everything in `site/` is disposable and rebuilt
+ * Input is the monorepo's `packages/hardware`; output is `site/` — a table, a
+ * page per device, and `devices.json`. Everything in `site/` is disposable and rebuilt
  * from scratch, so nothing there should ever be edited by hand.
  *
  * `npm run build`
@@ -10,13 +10,13 @@
 
 import { mkdir, rm, writeFile, readFile, copyFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
-import { loadDevices, loadFamilies, ROOT, SITE_DIR } from './lib/load.mjs';
+import { loadDevices, loadFamilies, HARDWARE_ROOT, ROOT, SITE_DIR } from './lib/load.mjs';
 import { renderDevicePage } from './lib/device-page.mjs';
 import { renderFamilyPage } from './lib/family-page.mjs';
 import { renderTablePage } from './lib/table-page.mjs';
 import { page, escapeHtml } from './lib/html.mjs';
 import { sanitiseSvg } from './lib/svg.mjs';
-import { repoFile } from './lib/site.mjs';
+import { siteRepoFile } from './lib/site.mjs';
 import { marked } from 'marked';
 
 /**
@@ -29,11 +29,16 @@ const EXPORT_VERSION = 1;
 
 const DOC_DESCRIPTION = {
     'README.md': 'What OpenTLP is, how to use the data, and how to contribute.',
-    'CONTRIBUTING.md': 'The fields, the evidence rules, and how to add a printer.'
+    'CONTRIBUTING.md': 'The fields, the evidence rules, and how to add a printer.',
+    'COLLABORATION.md': 'How OpenTLP works with projects documenting and supporting thermal printers.'
 };
 
 /** Documents that become pages here. Anything else stays on GitHub. */
-const DOC_PAGES = { 'README.md': 'about.html', 'CONTRIBUTING.md': 'contributing.html' };
+const DOC_PAGES = {
+    'README.md': 'about.html',
+    'CONTRIBUTING.md': 'contributing.html',
+    'COLLABORATION.md': 'collaboration.html'
+};
 
 const { devices: loaded, errors } = await loadDevices();
 const { devices: loadedFamilies, errors: familyErrors } = await loadFamilies();
@@ -66,7 +71,7 @@ await mkdir(SITE_DIR, { recursive: true });
 // inlined into a page. See lib/svg.mjs for what survives and why.
 for (const device of devices) {
     if (!device.artwork) continue;
-    const from = join(ROOT, dirname(device._path), device.artwork.file);
+    const from = join(HARDWARE_ROOT, dirname(device._path), device.artwork.file);
     let raw;
     try {
         raw = await readFile(from, 'utf8');
@@ -106,6 +111,8 @@ await writeFile(join(SITE_DIR, 'index.html'), renderTablePage({ devices, familie
 await writeFile(join(SITE_DIR, 'about.html'), await renderDoc('README.md', 'About', 'about'), 'utf8');
 await writeFile(join(SITE_DIR, 'contributing.html'),
     await renderDoc('CONTRIBUTING.md', 'Adding a printer', 'contributing'), 'utf8');
+await writeFile(join(SITE_DIR, 'collaboration.html'),
+    await renderDoc('COLLABORATION.md', 'Working together', 'collaboration'), 'utf8');
 await copyFile(join(ROOT, 'site-src/style.css'), join(SITE_DIR, 'style.css'));
 
 // GitHub Pages runs Jekyll unless told not to, and Jekyll silently drops paths
@@ -163,6 +170,6 @@ function rewriteRepoLinks(html) {
         const [path, hash] = target.split('#');
         if (DOC_PAGES[path]) return `href="${DOC_PAGES[path]}${hash ? '#' + hash : ''}"`;
         // Not built, so send the reader where the file actually is.
-        return `href="${repoFile(path)}"`;
+        return `href="${siteRepoFile(path)}"`;
     });
 }

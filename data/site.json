@@ -1,10 +1,21 @@
 {
-  "$comment": "Where this database is published and where its source lives. Everything that needs a URL derives it from here, so moving the site is one edit rather than a search across the generator.",
+  "$comment": "Public URLs used by the site renderer. Deployment workflow coordinates remain explicit infrastructure configuration.",
 
-  "owner": "josb25",
-  "repo": "opentlp",
+  "owner": "opentlp",
+  "repo": "table-of-hardware",
   "branch": "main",
 
+  "source_owner": "opentlp",
+  "source_repo": "opentlp",
+  "source_branch": "main",
+  "source_path": "packages/hardware",
+
   "$comment_url": "No custom domain required. GitHub Pages serves a project site from a subdirectory, which works because every internal link the generator emits is a bare filename — the site does not care what it is hosted under. Set this to a custom domain later and nothing else has to change.",
-  "url": "https://josb25.github.io/opentlp"
+  "url": "https://opentlp.github.io/table-of-hardware",
+
+  "organization_url": "https://github.com/opentlp",
+  "discord_url": "https://discord.gg/yksFD2rcPw",
+  "studio_url": "https://opentlp.github.io/opentlp/studio/",
+  "studio_repo_url": "https://github.com/opentlp/opentlp",
+  "core_url": "https://github.com/opentlp/opentlp/tree/main/packages/core"
 }

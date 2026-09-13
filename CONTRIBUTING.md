@@ -1,6 +1,7 @@
 # Adding a printer
 
-Each printer has a page at `devices/<brand>/<id>.md`: YAML front matter holding
+Each printer has a page at `packages/hardware/devices/<brand>/<id>.md` in the
+[OpenTLP monorepo](https://github.com/opentlp/opentlp): YAML front matter holding
 the structured record, then Markdown prose underneath. Copy an existing page,
 edit it, open a pull request.
 
@@ -10,7 +11,7 @@ Start its headings at `##`; the page title is generated.
 
 ```bash
 npm install
-npm run validate
+npm run catalogue:validate
 ```
 
 ## The rule
@@ -192,7 +193,7 @@ validator enforces this.
 
 **`support`** — only **free and open source** projects. A column in this matrix
 reads as a recommendation, and the database does not exist to route people
-towards paid software. Add a project to `data/projects.json` before referencing
+towards paid software. Add a project to `packages/hardware/data/projects.json` before referencing
 it; the validator rejects unknown slugs.
 
 Use `listed` when a project's model table or README names the printer. Use
@@ -272,7 +273,7 @@ reduced-motion preference belongs to whatever renders it.
 
 ## Adding a protocol family
 
-Wire formats live in `families/<slug>.md`, one per protocol, in the same page
+Wire formats live in `packages/hardware/families/<slug>.md`, one per protocol, in the same page
 format. Devices point at one through `protocol.family`.
 
 This is where driver-authoring detail belongs: packet framing, the checksum's

@@ -1,20 +1,15 @@
 {
-  "name": "opentlp",
+  "name": "opentlp-table-of-hardware-site",
   "version": "0.1.0",
   "private": true,
-  "description": "A community database of thermal label printers",
+  "description": "OpenTLP Table of Hardware: a community database of thermal label printers",
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "validate": "node scripts/validate.mjs",
     "build": "node scripts/build.mjs",
-    "start": "node scripts/build.mjs && node scripts/serve.mjs",
-    "import": "node scripts/import-catalogue.mjs",
-    "drift": "node scripts/drift.mjs"
+    "start": "node scripts/build.mjs && node scripts/serve.mjs"
   },
   "devDependencies": {
-    "ajv": "^8.17.1",
-    "ajv-formats": "^3.0.1",
     "marked": "^18.0.9",
     "yaml": "^2.8.0"
   }

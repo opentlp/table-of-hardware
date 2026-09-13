@@ -9,6 +9,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # The catalogue lives in another repository. This keeps the published site
+  # fresh even when only packages/hardware changes.
+  schedule:
+    - cron: '17 */6 * * *'
 
 permissions:
   contents: read
@@ -27,13 +31,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - name: Check out the OpenTLP hardware source
+        uses: actions/checkout@v6
+        with:
+          repository: opentlp/opentlp
+          path: opentlp-source
       - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run validate
+      - name: Install hardware validation dependencies
+        working-directory: opentlp-source
+        run: npm ci --workspace @opentlp/hardware --include-workspace-root=false
+      - name: Validate the canonical hardware source
+        working-directory: opentlp-source
+        run: npm run validate --workspace @opentlp/hardware
       - run: npm run build
+        env:
+          OPENTLP_HARDWARE_ROOT: ${{ github.workspace }}/opentlp-source/packages/hardware
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

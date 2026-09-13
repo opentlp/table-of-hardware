@@ -1,5 +1,5 @@
 /**
- * Reading the wiki off disk.
+ * Reading the monorepo hardware package off disk.
  *
  * A device is a Markdown page with YAML front matter. The front matter is the
  * structured record — it feeds the table and the JSON export, and the schema
@@ -12,13 +12,16 @@
  */
 
 import { readdir, readFile } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
 
 export const ROOT = fileURLToPath(new URL('../../', import.meta.url));
-export const DEVICES_DIR = join(ROOT, 'devices');
-export const FAMILIES_DIR = join(ROOT, 'families');
+export const HARDWARE_ROOT = resolve(
+    process.env.OPENTLP_HARDWARE_ROOT || join(ROOT, '..', 'opentlp', 'packages', 'hardware')
+);
+export const DEVICES_DIR = join(HARDWARE_ROOT, 'devices');
+export const FAMILIES_DIR = join(HARDWARE_ROOT, 'families');
 export const SITE_DIR = join(ROOT, 'site');
 
 /** @typedef {{ path: string, device: any, body: string }} LoadedDevice */
@@ -56,7 +59,7 @@ async function loadPages(root) {
 
     for (const file of await walk(root)) {
         if (!file.endsWith('.md')) continue;
-        const where = relative(ROOT, file).replaceAll('\\', '/');
+        const where = relative(HARDWARE_ROOT, file).replaceAll('\\', '/');
         const raw = await readFile(file, 'utf8');
 
         const split = splitFrontMatter(raw);

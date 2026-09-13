@@ -7,6 +7,14 @@
  * the table is fully rendered without it.
  */
 
+import {
+    CORE_URL,
+    DISCORD_URL,
+    ORGANIZATION_URL,
+    REPO_URL,
+    STUDIO_URL
+} from './site.mjs';
+
 const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
 /** @param {unknown} value */
@@ -32,21 +40,46 @@ export function page({ title, description = '', body, active = '' }) {
 ${description ? `<meta name="description" content="${escapeHtml(description)}">\n` : ''}<link rel="stylesheet" href="style.css">
 </head>
 <body>
+<a class="skip-link" href="#content">Skip to content</a>
 <header class="site">
-  <a class="wordmark" href="index.html">OpenTLP</a>
-  <nav>
-    <a href="index.html"${active === 'table' ? ' aria-current="page"' : ''}>Table of Hardware</a>
-    <a href="devices.json">JSON</a>
+  <a class="wordmark" href="index.html" aria-label="OpenTLP home"><span>Open</span>TLP</a>
+  <nav aria-label="Primary navigation">
+    <a href="index.html"${active === 'home' ? ' aria-current="page"' : ''}>Overview</a>
+    <a href="index.html#hardware">Hardware</a>
+    <a href="${escapeHtml(STUDIO_URL)}" aria-label="Studio (external site)">Studio</a>
+    <a href="${escapeHtml(CORE_URL)}" aria-label="Core (GitHub)">Core</a>
     <a href="contributing.html"${active === 'contributing' ? ' aria-current="page"' : ''}>Contribute</a>
     <a href="about.html"${active === 'about' ? ' aria-current="page"' : ''}>About</a>
   </nav>
 </header>
-<main>
+<main id="content">
 ${body}
 </main>
 <footer class="site">
-  <p>Device data is <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0-1.0</a> — public domain.
-     Site code is MIT. Linked sources keep their own terms.</p>
+  <div class="footer-grid">
+    <section>
+      <h2>Use OpenTLP</h2>
+      <a href="${escapeHtml(STUDIO_URL)}">Open Studio</a>
+      <a href="index.html#hardware">Find a printer</a>
+      <a href="devices.json">Device data</a>
+      <a href="families.json">Protocol data</a>
+    </section>
+    <section>
+      <h2>Build</h2>
+      <a href="${escapeHtml(CORE_URL)}">Core and drivers</a>
+      <a href="contributing.html">Contribute hardware</a>
+      <a href="collaboration.html">Collaborate</a>
+      <a href="${escapeHtml(ORGANIZATION_URL)}">GitHub organization</a>
+    </section>
+    <section>
+      <h2>Project</h2>
+      <a href="about.html">About OpenTLP</a>
+      <a href="${escapeHtml(DISCORD_URL)}">Discord community</a>
+      <a href="index.html#hardware">Table of Hardware</a>
+      <a href="${escapeHtml(REPO_URL)}#licence">Licences</a>
+    </section>
+  </div>
+  <p class="legal">Device data is <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0-1.0</a> — public domain. Site code is MIT. Linked sources keep their own terms.</p>
 </footer>
 </body>
 </html>

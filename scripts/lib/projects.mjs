@@ -9,9 +9,9 @@
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { ROOT } from './load.mjs';
+import { HARDWARE_ROOT } from './load.mjs';
 
-const raw = JSON.parse(await readFile(join(ROOT, 'data/projects.json'), 'utf8'));
+const raw = JSON.parse(await readFile(join(HARDWARE_ROOT, 'data/projects.json'), 'utf8'));
 
 /** @type {Map<string, { name: string, url?: string, licence?: string }>} */
 export const PROJECTS = new Map(
