@@ -49,7 +49,7 @@ const SUPPORT_BLURB = {
 };
 
 /** @param {{ device: any, body: string, byId: Map<string, any> }} input */
-export function renderDevicePage({ device, body, byId, families = new Set() }) {
+export function renderDevicePage({ device, body, byId, families = new Set(), apps = new Map() }) {
     const title = `${device.brand} ${device.model}`;
     const sections = [
         `<article class="device">`,
@@ -60,7 +60,7 @@ export function renderDevicePage({ device, body, byId, families = new Set() }) {
         identity(device, byId),
         printSpecs(device.print),
         mechanism(device.mechanism, device.print?.dpi),
-        protocol(device.protocol, families),
+        protocol(device.protocol, families, apps),
         connectivity(device.connectivity),
         indicators(device.indicators),
         reports(device.reports),
@@ -440,8 +440,19 @@ function certLink(cert) {
     return cert.holder ? `${link} <span class="muted">${escapeHtml(cert.holder)}</span>` : link;
 }
 
-function protocol(protocol, families) {
+function protocol(protocol, families, apps) {
     if (!protocol) return '';
+    let appLink = '';
+    if (protocol.app) {
+        const appSlug = protocol.app.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        if (apps?.has(appSlug)) {
+            appLink = `<a href="${escapeHtml(appSlug)}.html">${escapeHtml(protocol.app)}</a>`;
+        } else if (apps?.has(protocol.app)) {
+            appLink = `<a href="${escapeHtml(apps.get(protocol.app).id)}.html">${escapeHtml(protocol.app)}</a>`;
+        } else {
+            appLink = escapeHtml(protocol.app);
+        }
+    }
     return section('Protocol', specTable([
         // Linked only where the family has a page. Linking unconditionally is
         // how fourteen device pages came to point at a file nobody had written.
@@ -451,6 +462,7 @@ function protocol(protocol, families) {
                 : mono(protocol.family)],
         ['Variant', protocol.variant ? mono(protocol.variant) : ''],
         ['Packet prefix', protocol.packet_prefix ? mono(protocol.packet_prefix) : ''],
+        ['Companion app', appLink],
         ['Vendor app', protocol.vendor_app ? mono(protocol.vendor_app) : '']
     ]));
 }

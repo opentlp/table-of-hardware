@@ -710,3 +710,91 @@ table.lamps th { font-weight: 500; color: var(--text); }
 .lampbtn:hover { border-color: var(--muted); }
 .lampbtn.is-on { outline: 2px solid var(--text); outline-offset: 1px; }
 .lampbtn .lamp { margin: 0; }
+
+/* ---- companion apps ---- */
+
+.app-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 16px;
+    flex-shrink: 0;
+    border: 1px solid transparent;
+    user-select: none;
+}
+
+.app-badge.light-bg {
+    border-color: var(--line);
+}
+
+.app-badge.mini {
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+    border-radius: 6px;
+}
+
+.app-page-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.app-page-header h1 {
+    margin: 0;
+}
+
+.app-page-header .developer {
+    margin: 0.2rem 0 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.store-links {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.button-store {
+    font-size: 0.85rem;
+    padding: 0.35rem 0.75rem;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.button-store:hover {
+    border-color: var(--text);
+    transform: translateY(-1px);
+}
+
+.button-xs {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+}
+
+.apps-section {
+    margin-top: 1rem;
+}
+
+.apps-table {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.apps-table td.art {
+    width: 36px;
+    text-align: center;
+}
+

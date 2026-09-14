@@ -46,6 +46,7 @@ ${description ? `<meta name="description" content="${escapeHtml(description)}">\
   <nav aria-label="Primary navigation">
     <a href="index.html"${active === 'home' ? ' aria-current="page"' : ''}>Overview</a>
     <a href="index.html#hardware">Hardware</a>
+    <a href="index.html#apps">Apps</a>
     <a href="${escapeHtml(STUDIO_URL)}" aria-label="Studio (external site)">Studio</a>
     <a href="${escapeHtml(CORE_URL)}" aria-label="Core (GitHub)">Core</a>
     <a href="contributing.html"${active === 'contributing' ? ' aria-current="page"' : ''}>Contribute</a>
@@ -63,6 +64,7 @@ ${body}
       <a href="index.html#hardware">Find a printer</a>
       <a href="devices.json">Device data</a>
       <a href="families.json">Protocol data</a>
+      <a href="apps.json">App data</a>
     </section>
     <section>
       <h2>Build</h2>
@@ -76,6 +78,7 @@ ${body}
       <a href="about.html">About OpenTLP</a>
       <a href="${escapeHtml(DISCORD_URL)}">Discord community</a>
       <a href="index.html#hardware">Table of Hardware</a>
+      <a href="index.html#apps">Companion apps</a>
       <a href="${escapeHtml(REPO_URL)}#licence">Licences</a>
     </section>
   </div>

@@ -8,6 +8,7 @@
 
 import { escapeHtml, humanise, page } from './html.mjs';
 import { projectName } from './projects.mjs';
+import { getBadgeStyles } from './app-page.mjs';
 import {
     CORE_URL,
     DISCORD_URL,
@@ -16,8 +17,8 @@ import {
     STUDIO_URL
 } from './site.mjs';
 
-/** @param {{ devices: any[] }} input */
-export function renderTablePage({ devices, families = [] }) {
+/** @param {{ devices: any[], families?: any[], apps?: any[] }} input */
+export function renderTablePage({ devices, families = [], apps = [] }) {
     const documented = new Set(families.map(family => family.id));
 
     // What a family is colloquially called, so a search for "cat printer" finds
@@ -71,6 +72,49 @@ export function renderTablePage({ devices, families = [] }) {
     const verified = devices.filter(device => device.status === 'verified').length;
     const protocolCount = families.length;
 
+    const appRows = apps.map(app => {
+        const badge = getBadgeStyles(app.brand_palette, app.brand_color);
+        const protocolLinks = (app.protocols ?? []).map(p =>
+            documented.has(p)
+                ? `<a href="${escapeHtml(p)}.html"><code>${escapeHtml(p)}</code></a>`
+                : `<code>${escapeHtml(p)}</code>`
+        ).join(' ') || '<span class="muted">—</span>';
+
+        const compatibleCount = devices.filter(device =>
+            (app.protocols && device.protocol?.family && app.protocols.includes(device.protocol.family)) ||
+            (device.protocol?.app && (
+                device.protocol.app.toLowerCase() === app.name.toLowerCase() ||
+                device.protocol.app.toLowerCase().replace(/[^a-z0-9]+/g, '-') === app.id
+            ))
+        ).length;
+
+        const storeButtons = [];
+        if (app.platforms?.android?.url) {
+            storeButtons.push(`<a class="button button-store button-xs" href="${escapeHtml(app.platforms.android.url)}" target="_blank" rel="noopener noreferrer">Play Store ↗</a>`);
+        }
+        if (app.platforms?.ios?.url) {
+            storeButtons.push(`<a class="button button-store button-xs" href="${escapeHtml(app.platforms.ios.url)}" target="_blank" rel="noopener noreferrer">App Store ↗</a>`);
+        }
+        const storeLinks = storeButtons.join(' ') || '<span class="muted">—</span>';
+
+        const popular = app.popular_models?.length
+            ? `<div class="muted" style="font-size: 0.8rem; margin-top: 0.2rem;">${escapeHtml(app.popular_models.slice(0, 3).join(', '))}</div>`
+            : '';
+
+        const aliases = (app.replaces_apps ?? []).filter(a => a.toLowerCase() !== app.name.toLowerCase());
+        const aliasBadge = aliases.length ? ` <span class="rebadge" title="Also known as: ${escapeHtml(aliases.join(', '))}">${escapeHtml(aliases[0])}</span>` : '';
+
+        return `<tr>
+<td class="art"><div class="app-badge mini${badge.isLight ? ' light-bg' : ''}" style="background:${badge.bg};color:${badge.color};"><span>${escapeHtml(app.badge_letter)}</span></div></td>
+<td class="model"><a href="${escapeHtml(app.id)}.html"><strong>${escapeHtml(app.name)}</strong></a>${aliasBadge}</td>
+<td class="brand">${escapeHtml(app.developer)}</td>
+<td class="family">${protocolLinks}</td>
+<td class="num">${compatibleCount > 0 ? `<a href="${escapeHtml(app.id)}.html">${compatibleCount}&nbsp;models</a>` : '<span class="muted">none</span>'}${popular}</td>
+<td class="support">${storeLinks}</td>
+<td class="status"><span class="dot dot-${escapeHtml(app.status ?? 'unverified')}" title="${escapeHtml(humanise(app.status ?? 'unverified'))}"></span></td>
+</tr>`;
+    }).join('\n');
+
     const body = `<section class="project-hero" aria-labelledby="project-title">
 <p class="eyebrow">Open thermal label printing</p>
 <h1 id="project-title">Make the printer yours.</h1>
@@ -78,6 +122,7 @@ export function renderTablePage({ devices, families = [] }) {
 <div class="hero-actions">
   <a class="button button-primary" href="${escapeHtml(STUDIO_URL)}">Open Studio</a>
   <a class="button" href="#hardware">Find a printer</a>
+  <a class="button" href="#apps">Companion apps</a>
   <a class="text-link" href="${escapeHtml(DISCORD_URL)}">Join the Discord <span aria-hidden="true">→</span></a>
 </div>
 </section>
@@ -119,6 +164,7 @@ export function renderTablePage({ devices, families = [] }) {
   <dl class="catalogue-stats" aria-label="Catalogue totals">
     <div><dt>${devices.length === 1 ? 'printer' : 'printers'}</dt><dd>${devices.length}</dd></div>
     <div><dt>${protocolCount === 1 ? 'protocol family' : 'protocol families'}</dt><dd>${protocolCount}</dd></div>
+    <div><dt>${apps.length === 1 ? 'companion app' : 'companion apps'}</dt><dd>${apps.length}</dd></div>
     <div><dt>verified</dt><dd>${verified}</dd></div>
   </dl>
 </div>
@@ -165,6 +211,37 @@ ${rows}
 have a page documenting the wire format. A row marked <span class="rebadge">rebadge</span>
 is the same hardware as another entry under a different name.</p>
 </aside>
+</section>
+
+<section class="hardware-section apps-section" id="apps" aria-labelledby="apps-title">
+<div class="hardware-heading">
+  <div>
+    <p class="eyebrow">Directory</p>
+    <h2 id="apps-title">Companion Applications</h2>
+    <p class="lede">Commercial thermal printers ship with vendor mobile applications. This directory maps each app to its wire protocols, compatible hardware, and reverse engineering evidence.</p>
+  </div>
+  <dl class="catalogue-stats" aria-label="App totals">
+    <div><dt>${apps.length === 1 ? 'app' : 'apps'}</dt><dd>${apps.length}</dd></div>
+    <div><dt>verified</dt><dd>${apps.filter(a => a.status === 'verified').length}</dd></div>
+  </dl>
+</div>
+
+<table class="toh apps-table" id="apps-toh">
+<thead>
+<tr>
+<th scope="col"><span class="visually-hidden">Badge</span></th>
+<th scope="col">Application</th>
+<th scope="col">Developer</th>
+<th scope="col">Protocol</th>
+<th scope="col">Compatible hardware</th>
+<th scope="col">Stores</th>
+<th scope="col"><span class="visually-hidden">Status</span></th>
+</tr>
+</thead>
+<tbody>
+${appRows}
+</tbody>
+</table>
 </section>
 
 <section class="principles" aria-labelledby="principles-title">

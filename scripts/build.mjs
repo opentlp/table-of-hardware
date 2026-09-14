@@ -10,9 +10,10 @@
 
 import { mkdir, rm, writeFile, readFile, copyFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
-import { loadDevices, loadFamilies, HARDWARE_ROOT, ROOT, SITE_DIR } from './lib/load.mjs';
+import { loadDevices, loadFamilies, loadApps, HARDWARE_ROOT, ROOT, SITE_DIR } from './lib/load.mjs';
 import { renderDevicePage } from './lib/device-page.mjs';
 import { renderFamilyPage } from './lib/family-page.mjs';
+import { renderAppPage } from './lib/app-page.mjs';
 import { renderTablePage } from './lib/table-page.mjs';
 import { page, escapeHtml } from './lib/html.mjs';
 import { sanitiseSvg } from './lib/svg.mjs';
@@ -42,7 +43,8 @@ const DOC_PAGES = {
 
 const { devices: loaded, errors } = await loadDevices();
 const { devices: loadedFamilies, errors: familyErrors } = await loadFamilies();
-errors.push(...familyErrors);
+const { devices: loadedApps, errors: appErrors } = await loadApps();
+errors.push(...familyErrors, ...appErrors);
 if (errors.length) {
     for (const error of errors) console.error(`error ${error}`);
     console.error('\nRefusing to build. Fix the pages above, then run `npm run validate`.');
@@ -63,6 +65,23 @@ const families = loadedFamilies
     .sort((a, b) => a.id.localeCompare(b.id));
 
 const familyIds = new Set(families.map(family => family.id));
+
+const apps = loadedApps
+    .map(({ device, body, path }) => ({ ...device, body, _path: path }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+const appsById = new Map();
+for (const app of apps) {
+    appsById.set(app.id, app);
+    appsById.set(app.name.toLowerCase(), app);
+    appsById.set(app.name, app);
+    if (app.replaces_apps) {
+        for (const alias of app.replaces_apps) {
+            appsById.set(alias.toLowerCase(), app);
+            appsById.set(alias.toLowerCase().replace(/[^a-z0-9]+/g, '-'), app);
+        }
+    }
+}
 
 await rm(SITE_DIR, { recursive: true, force: true });
 await mkdir(SITE_DIR, { recursive: true });
@@ -90,7 +109,7 @@ for (const device of devices) {
 for (const device of devices) {
     await writeFile(
         join(SITE_DIR, `${device.id}.html`),
-        renderDevicePage({ device, body: device.body, byId, families: familyIds }),
+        renderDevicePage({ device, body: device.body, byId, families: familyIds, apps: appsById }),
         'utf8'
     );
 }
@@ -107,7 +126,26 @@ for (const family of families) {
     );
 }
 
-await writeFile(join(SITE_DIR, 'index.html'), renderTablePage({ devices, families }), 'utf8');
+for (const app of apps) {
+    await writeFile(
+        join(SITE_DIR, `${app.id}.html`),
+        renderAppPage({
+            app,
+            body: app.body,
+            devices: devices.filter(device =>
+                (app.protocols && device.protocol?.family && app.protocols.includes(device.protocol.family)) ||
+                (device.protocol?.app && (
+                    device.protocol.app.toLowerCase() === app.name.toLowerCase() ||
+                    device.protocol.app.toLowerCase().replace(/[^a-z0-9]+/g, '-') === app.id
+                ))
+            ),
+            families: familyIds
+        }),
+        'utf8'
+    );
+}
+
+await writeFile(join(SITE_DIR, 'index.html'), renderTablePage({ devices, families, apps }), 'utf8');
 await writeFile(join(SITE_DIR, 'about.html'), await renderDoc('README.md', 'About', 'about'), 'utf8');
 await writeFile(join(SITE_DIR, 'contributing.html'),
     await renderDoc('CONTRIBUTING.md', 'Adding a printer', 'contributing'), 'utf8');
@@ -140,7 +178,16 @@ await writeFile(join(SITE_DIR, 'families.json'), JSON.stringify({
     families: families.map(({ body, _path, ...record }) => record)
 }, null, 2) + '\n', 'utf8');
 
-console.log(`Built ${devices.length} device page(s) and ${families.length} family page(s) into site/.`);
+// Companion mobile applications export
+await writeFile(join(SITE_DIR, 'apps.json'), JSON.stringify({
+    version: EXPORT_VERSION,
+    generated: new Date().toISOString().slice(0, 10),
+    licence: 'CC0-1.0',
+    count: apps.length,
+    apps: apps.map(({ body, _path, ...record }) => record)
+}, null, 2) + '\n', 'utf8');
+
+console.log(`Built ${devices.length} device page(s), ${families.length} family page(s), and ${apps.length} app page(s) into site/.`);
 
 /**
  * A repository document rendered as a site page.
