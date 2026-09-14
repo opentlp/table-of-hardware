@@ -9,6 +9,7 @@
 import { escapeHtml, humanise, page } from './html.mjs';
 import { projectName } from './projects.mjs';
 import { getBadgeStyles } from './app-page.mjs';
+import { deviceMatchesApp } from './load.mjs';
 import {
     CORE_URL,
     DISCORD_URL,
@@ -80,13 +81,7 @@ export function renderTablePage({ devices, families = [], apps = [] }) {
                 : `<code>${escapeHtml(p)}</code>`
         ).join(' ') || '<span class="muted">—</span>';
 
-        const compatibleCount = devices.filter(device =>
-            (app.protocols && device.protocol?.family && app.protocols.includes(device.protocol.family)) ||
-            (device.protocol?.app && (
-                device.protocol.app.toLowerCase() === app.name.toLowerCase() ||
-                device.protocol.app.toLowerCase().replace(/[^a-z0-9]+/g, '-') === app.id
-            ))
-        ).length;
+        const compatibleCount = devices.filter(device => deviceMatchesApp(device, app)).length;
 
         const storeButtons = [];
         if (app.platforms?.android?.url) {

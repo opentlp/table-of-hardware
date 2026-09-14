@@ -11,6 +11,7 @@
  * the one place that knows the on-disk layout.
  */
 
+import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,7 +19,10 @@ import { parse } from 'yaml';
 
 export const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 export const HARDWARE_ROOT = resolve(
-    process.env.OPENTLP_HARDWARE_ROOT || join(ROOT, '..', 'opentlp', 'packages', 'hardware')
+    process.env.OPENTLP_HARDWARE_ROOT ||
+    (existsSync(join(ROOT, '..', 'opentlp', 'packages', 'hardware'))
+        ? join(ROOT, '..', 'opentlp', 'packages', 'hardware')
+        : join(ROOT, '..', 'BleWebler2', 'packages', 'hardware'))
 );
 export const DEVICES_DIR = join(HARDWARE_ROOT, 'devices');
 export const FAMILIES_DIR = join(HARDWARE_ROOT, 'families');
@@ -123,4 +127,56 @@ async function walk(dir) {
         else found.push(full);
     }
     return found;
+}
+
+/**
+ * Determines whether a hardware device record matches a companion mobile app.
+ *
+ * Disambiguates multi-device applications (e.g. Pocket Printer) and respects
+ * explicit `protocol.app` and `protocol.vendor_app` declarations on devices so
+ * that models are not greedily captured across manufacturers sharing a wire protocol.
+ *
+ * @param {any} device
+ * @param {any} app
+ * @returns {boolean}
+ */
+export function deviceMatchesApp(device, app) {
+    if (!device || !app) return false;
+
+    // 1. Explicit app name or alias match
+    if (device.protocol?.app) {
+        const a = device.protocol.app.toLowerCase();
+        if (a === app.name.toLowerCase() ||
+            a.replace(/[^a-z0-9]+/g, '-') === app.id ||
+            (app.replaces_apps && app.replaces_apps.some(r => r.toLowerCase() === a)) ||
+            (device.protocol.replaces_apps && device.protocol.replaces_apps.some(r =>
+                r.toLowerCase() === app.name.toLowerCase() ||
+                (app.replaces_apps && app.replaces_apps.some(ar => ar.toLowerCase() === r.toLowerCase()))
+            ))) {
+            return true;
+        }
+        return false;
+    }
+
+    // 2. Explicit Android vendor package match
+    if (device.protocol?.vendor_app && app.platforms?.android?.package) {
+        if (device.protocol.vendor_app === app.platforms.android.package) {
+            return true;
+        }
+        return false;
+    }
+
+    // 3. Brand name match (e.g. Phomemo brand -> Phomemo app)
+    if (device.brand && device.brand.toLowerCase() === app.name.toLowerCase()) {
+        if (app.protocols && device.protocol?.family && app.protocols.includes(device.protocol.family)) {
+            return true;
+        }
+    }
+
+    // 4. Fallback for single-device protocol families
+    if (!app.is_multi_device && app.protocols && device.protocol?.family && app.protocols.includes(device.protocol.family)) {
+        return true;
+    }
+
+    return false;
 }

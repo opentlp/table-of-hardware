@@ -10,7 +10,7 @@
 
 import { mkdir, rm, writeFile, readFile, copyFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
-import { loadDevices, loadFamilies, loadApps, HARDWARE_ROOT, ROOT, SITE_DIR } from './lib/load.mjs';
+import { loadDevices, loadFamilies, loadApps, deviceMatchesApp, HARDWARE_ROOT, ROOT, SITE_DIR } from './lib/load.mjs';
 import { renderDevicePage } from './lib/device-page.mjs';
 import { renderFamilyPage } from './lib/family-page.mjs';
 import { renderAppPage } from './lib/app-page.mjs';
@@ -132,13 +132,7 @@ for (const app of apps) {
         renderAppPage({
             app,
             body: app.body,
-            devices: devices.filter(device =>
-                (app.protocols && device.protocol?.family && app.protocols.includes(device.protocol.family)) ||
-                (device.protocol?.app && (
-                    device.protocol.app.toLowerCase() === app.name.toLowerCase() ||
-                    device.protocol.app.toLowerCase().replace(/[^a-z0-9]+/g, '-') === app.id
-                ))
-            ),
+            devices: devices.filter(device => deviceMatchesApp(device, app)),
             families: familyIds
         }),
         'utf8'
